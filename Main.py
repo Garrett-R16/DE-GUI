@@ -2,15 +2,29 @@ from PyQt6 import QtWidgets, uic, QtCore, QtGui
 import cv2
 import sys
 
-import imagecodecs
-
+# creating the main window
 
 class MainWindow(QtWidgets.QMainWindow):
   def __init__(self, *args, **kwargs):
     super(MainWindow, self).__init__(*args, **kwargs)
 
+    # loading the qtdesigner GUI I made
+
     uic.loadUi('draftGUI.ui', self)
-    self.x_pos.clicked.connect(self.xButtonClicked)
+
+    # mapping the buttons to a function--probably a better way of doing this but ¯\_(ツ)_/¯ for the mmt
+
+    self.x_pos.clicked.connect(self.ButtonClicked)
+    self.x_neg.clicked.connect(self.ButtonClicked)
+    self.y_pos.clicked.connect(self.ButtonClicked)
+    self.y_neg.clicked.connect(self.ButtonClicked)
+    self.z_pos.clicked.connect(self.ButtonClicked)
+    self.z_neg.clicked.connect(self.ButtonClicked)
+    self.grip_pos.clicked.connect(self.ButtonClicked)
+    self.grip_neg.clicked.connect(self.ButtonClicked)
+    self.grip_state.clicked.connect(self.ButtonClicked)
+
+    # Starting a second thread to run the camera video
 
     self.Worker1 = Worker1()
     self.Worker1.start()
@@ -19,10 +33,15 @@ class MainWindow(QtWidgets.QMainWindow):
   def ImageUpdateSlot(self, Image):
     self.labelFeed.setPixmap(QtGui.QPixmap.fromImage(Image))
     
-  def xButtonClicked(self):
+  # basic button function
+
+  def ButtonClicked(self):
     print("click")
 
 class Worker1(QtCore.QThread):
+
+  # essentially retrieving the video from the camera using OpenCV and then putting it in a format PyQt can read
+
   ImageUpdate = QtCore.pyqtSignal(QtGui.QImage)
   print("worker initialized")
   camera = cv2.VideoCapture(0)
