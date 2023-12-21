@@ -6,6 +6,16 @@ import time
 import enum
 import cv2
 import sys
+import warnings
+warnings.simplefilter("ignore", UserWarning)
+sys.coinit_flags = 2
+import asyncio
+import platform
+import cv2
+
+
+if platform.system() == 'Windows':
+  import winrt.windows.devices.enumeration as windows_devices
 
 # creating the main window
 
@@ -31,9 +41,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # Starting a second thread to run the camera video
 
+    self.camera_tracker = camera_tracker()
+    self.cameras_object = self.camera_tracker.get_camera_info()
+
+    for i in self.cameras_object:
+      camera_name = str(i.get('camera_index')) + " " + i.get('camera_name')
+      self.comboCamera.addItem(camera_name)
+
     self.Worker1 = Worker1()
     self.Worker1.start()
     self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
+
   
   def ImageUpdateSlot(self, Image):
     self.labelFeed.setPixmap(QtGui.QPixmap.fromImage(Image))
@@ -50,7 +68,7 @@ class Worker1(QtCore.QThread):
   # essentially retrieving the video from the camera using OpenCV and then putting it in a format PyQt can read
 
   ImageUpdate = QtCore.pyqtSignal(QtGui.QImage)
-  print("worker initialized")
+  print("Worker1 initialized")
   camera = cv2.VideoCapture(0)
 
   def run(self):
@@ -68,6 +86,59 @@ class Worker1(QtCore.QThread):
         ConvertToQtFormat = QtGui.QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0], QtGui.QImage.Format.Format_RGB888)
         Pic = ConvertToQtFormat.scaled(800, 700, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         self.ImageUpdate.emit(Pic)
+
+
+VIDEO_DEVICES = 4
+
+class camera_tracker:
+
+  def __init__(self):
+    print("camera tracker initialized")
+    self.cameras = []
+
+  def get_camera_info(self) -> list:
+    self.cameras = []
+
+    camera_indexes = self.get_camera_indexes()
+
+    if len(camera_indexes) == 0:
+      return self.cameras
+
+    self.cameras = self.add_camera_information(camera_indexes)
+
+    return self.cameras
+
+  def get_camera_indexes(self):
+    index = 0
+    camera_indexes = []
+    max_numbers_of_cameras_to_check = 10
+    while max_numbers_of_cameras_to_check > 0:
+      capture = cv2.VideoCapture(index)
+      if capture.read()[0]:
+        camera_indexes.append(index)
+        capture.release()
+      index += 1
+      max_numbers_of_cameras_to_check -= 1
+    return camera_indexes
+
+  # TODO add MacOS specific implementations
+  def add_camera_information(self, camera_indexes: list) -> list:
+      platform_name = platform.system()
+      cameras = []
+
+      if platform_name == 'Windows':
+          cameras_info_windows = asyncio.run(self.get_camera_information_for_windows())
+
+          for camera_index in camera_indexes:
+              
+              if camera_index < len(cameras_info_windows):
+                camera_name = cameras_info_windows.get_at(camera_index).name.replace('\n', '')
+                cameras.append({'camera_index': camera_index, 'camera_name': camera_name})
+
+          return cameras
+      
+  async def get_camera_information_for_windows(self):
+      return await windows_devices.DeviceInformation.find_all_async(VIDEO_DEVICES)
 
 # The button and arm control sections of code are heavily inspired by the work Jonathan Hearn
 # It relies on the use of the library he created for controlling the UFactory arm with xbox controls
