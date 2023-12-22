@@ -506,7 +506,7 @@
 	border-radius: 15px; 
 }
 QPushButton:hover{
-    border-color: rgb(0, 0, 0, 255);
+    translateY(-5px);
 }
 
 centralwidget  {background-color: rgb(37, 41, 28);}</string>
@@ -521,6 +521,9 @@ centralwidget  {background-color: rgb(37, 41, 28);}</string>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_2">
+     <property name="sizeConstraint">
+      <enum>QLayout::SetDefaultConstraint</enum>
+     </property>
      <item>
       <widget class="QLabel" name="label">
        <property name="font">
@@ -539,10 +542,19 @@ centralwidget  {background-color: rgb(37, 41, 28);}</string>
      </item>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <property name="spacing">
+        <number>40</number>
+       </property>
        <item>
         <layout class="QVBoxLayout" name="verticalLayout_3">
          <item>
-          <widget class="QComboBox" name="comboCamera"/>
+          <widget class="QComboBox" name="comboCamera">
+           <property name="font">
+            <font>
+             <pointsize>12</pointsize>
+            </font>
+           </property>
+          </widget>
          </item>
          <item>
           <widget class="QLabel" name="labelFeed">
@@ -566,6 +578,12 @@ centralwidget  {background-color: rgb(37, 41, 28);}</string>
         <layout class="QVBoxLayout" name="verticalLayout">
          <item>
           <widget class="QLabel" name="label_2">
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>50</height>
+            </size>
+           </property>
            <property name="font">
             <font>
              <pointsize>20</pointsize>

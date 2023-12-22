@@ -44,15 +44,27 @@ class MainWindow(QtWidgets.QMainWindow):
     self.camera_tracker = camera_tracker()
     self.cameras_object = self.camera_tracker.get_camera_info()
 
+    # adding the options to the QComboBox
+
     for i in self.cameras_object:
       camera_name = str(i.get('camera_index')) + " " + i.get('camera_name')
       self.comboCamera.addItem(camera_name)
+
+    self.comboCamera.currentIndexChanged.connect(self.on_combo_box_changed)
 
     self.Worker1 = Worker1()
     self.Worker1.start()
     self.Worker1.ImageUpdate.connect(self.ImageUpdateSlot)
 
-  
+  def on_combo_box_changed(self, selection):
+    # splitting the selected text into an index of strings to access the first value, the camera index
+    selection = self.comboCamera.currentText()
+    selection.split()
+
+    new_camera_index = int(selection[0])
+    print(new_camera_index)
+    self.Worker1.camera_changed(new_camera_index)
+
   def ImageUpdateSlot(self, Image):
     self.labelFeed.setPixmap(QtGui.QPixmap.fromImage(Image))
 
@@ -69,7 +81,15 @@ class Worker1(QtCore.QThread):
 
   ImageUpdate = QtCore.pyqtSignal(QtGui.QImage)
   print("Worker1 initialized")
-  camera = cv2.VideoCapture(0)
+
+  def __init__(self):
+    super(Worker1, self).__init__()
+    print("Worker1 initialized")
+    self.camera = cv2.VideoCapture(0)
+
+  def camera_changed(self, camera_index):
+    self.camera.release()
+    self.camera = cv2.VideoCapture(camera_index)
 
   def run(self):
     print("thread is running")
@@ -86,7 +106,6 @@ class Worker1(QtCore.QThread):
         ConvertToQtFormat = QtGui.QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0], QtGui.QImage.Format.Format_RGB888)
         Pic = ConvertToQtFormat.scaled(800, 700, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         self.ImageUpdate.emit(Pic)
-
 
 VIDEO_DEVICES = 4
 
@@ -144,7 +163,6 @@ class camera_tracker:
 # It relies on the use of the library he created for controlling the UFactory arm with xbox controls
 
 #class Button(Control, Handler):
-
 
 def main():
   app=QtWidgets.QApplication(sys.argv)
