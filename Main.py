@@ -31,13 +31,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
     self.list1 = ["x", "y", "z", "grip"]
 
-    for i in self.list1:
-      exec("self.{}_pos.{}.connect(self.ButtonClicked)".format(i, "clicked"))
-      exec("self.{}_neg.{}.connect(self.ButtonClicked)".format(i, "clicked"))
-      exec("self.{}_pos.{}.connect(self.ButtonReleased)".format(i, "released"))
-      exec("self.{}_neg.{}.connect(self.ButtonReleased)".format(i, "released"))
+    for button_direction in self.list1:
+      button = getattr(self, f"{button_direction}_pos")  # Assuming buttons have names like x_pos, y_pos, etc.
+      button.pressed.connect(lambda: self.Button_Action(button_direction, "pressed"))
+      button.released.connect(lambda: self.Button_Action(button_direction, "released"))
 
-    self.grip_state.clicked.connect(self.ButtonClicked)
+      button = getattr(self, f"{button_direction}_neg")
+      button.pressed.connect(lambda: self.Button_Action(button_direction, "pressed"))
+      button.released.connect(lambda: self.Button_Action(button_direction, "released"))
+      #exec("self.{}_pos.{}.connect(self.Button_Action({}))".format(i, "pressed", "pressed"))
+      #exec("self.{}_neg.{}.connect(self.Button_Action({}))".format(i, "pressed", "pressed"))
+      
+      #exec("self.{}_pos.{}.connect(self.Button_Action({}))".format(i, "released", "released"))
+      #exec("self.{}_neg.{}.connect(self.Button_Action({}))".format(i, "released", "released"))
+
+    self.grip_state.pressed.connect(lambda: self.Button_Action("grip_state", "pressed"))
+    self.grip_state.released.connect(lambda: self.Button_Action("grip_state", "released"))
 
     # Starting a second thread to run the camera video
 
@@ -69,11 +78,15 @@ class MainWindow(QtWidgets.QMainWindow):
     self.labelFeed.setPixmap(QtGui.QPixmap.fromImage(Image))
 
   # basic button function
-  def ButtonClicked(self):
-    print("click")
+  def Button_Action(self, button_name, action_type):
+    print(f"Button {button_name} {action_type}")
 
-  def ButtonReleased(self):
-    print("Released")
+    if action_type == "pressed":
+      self.start_time = time.time()
+
+    if action_type == "released":
+      elapsed_time = time.time() - self.start_time
+      print(f"{button_name} held for {elapsed_time} seconds")
 
 class Worker1(QtCore.QThread):
 
@@ -104,7 +117,7 @@ class Worker1(QtCore.QThread):
         Image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         FlippedImage = cv2.flip(Image, 1)
         ConvertToQtFormat = QtGui.QImage(FlippedImage.data, FlippedImage.shape[1], FlippedImage.shape[0], QtGui.QImage.Format.Format_RGB888)
-        Pic = ConvertToQtFormat.scaled(800, 700, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
+        Pic = ConvertToQtFormat.scaled(800, 650, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         self.ImageUpdate.emit(Pic)
 
 VIDEO_DEVICES = 4
