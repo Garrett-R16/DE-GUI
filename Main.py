@@ -45,8 +45,7 @@ class MainWindow(QtWidgets.QMainWindow):
       #exec("self.{}_pos.{}.connect(self.Button_Action({}))".format(i, "released", "released"))
       #exec("self.{}_neg.{}.connect(self.Button_Action({}))".format(i, "released", "released"))
 
-    self.grip_state.pressed.connect(lambda: self.Button_Action("grip_state", "pressed"))
-    self.grip_state.released.connect(lambda: self.Button_Action("grip_state", "released"))
+    self.grip_state.clicked.connect(lambda: self.Button_Action("grip_state", "clicked"))
 
     # Starting a second thread to run the camera video
 
@@ -122,6 +121,8 @@ class Worker1(QtCore.QThread):
 
 VIDEO_DEVICES = 4
 
+# Big thanks to https://stackoverflow.com/questions/52558617/enumerate-over-cameras-in-python for helping figuring out how to enumrate over cameras
+
 class camera_tracker:
 
   def __init__(self):
@@ -171,11 +172,6 @@ class camera_tracker:
       
   async def get_camera_information_for_windows(self):
       return await windows_devices.DeviceInformation.find_all_async(VIDEO_DEVICES)
-
-# The button and arm control sections of code are heavily inspired by the work Jonathan Hearn
-# It relies on the use of the library he created for controlling the UFactory arm with xbox controls
-
-#class Button(Control, Handler):
 
 def main():
   app=QtWidgets.QApplication(sys.argv)
