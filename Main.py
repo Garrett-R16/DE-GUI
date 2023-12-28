@@ -9,7 +9,6 @@ import asyncio
 import platform
 import cv2
 
-
 if platform.system() == 'Windows':
 	import winrt.windows.devices.enumeration as windows_devices
 
@@ -28,8 +27,6 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.armDirections = ["x", "y", "z", "grip"]
 
 		# starting button monitor qthread
-		self.button_monitor = button_monitor()
-		self.button_monitor.start()
 
 		for button_direction in self.armDirections:
 			button = getattr(self, f"{button_direction}_pos")  # Assuming buttons have names like x_pos, y_pos, etc.
@@ -59,6 +56,8 @@ class MainWindow(QtWidgets.QMainWindow):
 		self.imageMonitor.start()
 		self.imageMonitor.ImageUpdate.connect(self.ImageUpdateSlot)
 
+		self.button_monitor = button_monitor()
+
 	def on_combo_box_changed(self, selection):
         # splitting the selected text into an index of strings to access the first value, the camera index
 		selection = self.comboCamera.currentText().split()
@@ -73,52 +72,51 @@ class MainWindow(QtWidgets.QMainWindow):
 	def Button_Action(self, button_name, action_type):
 		print(f"Button {button_name} {action_type}")
 		
-
 		if action_type == "pressed":
 			self.start_time = time.time()
-			self.button_monitor.button_state(action_type, self.start_time, button_name)
-			
-		if action_type == "released":
-			self.button_monitor.button_state(action_type, self.start_time, button_name)
-			# self.button_monitor
-			# elapsed_time = time.time() - self.start_time
-			# if elapsed_time <= 0.5:
-			# 	print("button was pressed")
-			# if elapsed_time>0.5:
-			# 	print(f"{button_name} held for {elapsed_time} seconds")
-    
+			self.button_monitor.start()
+
+		self.button_monitor.button_state(action_type, self.start_time, button_name)
+
+# button monitor to monitor whether a button is being held or just pressed
+
 class button_monitor(QtCore.QThread):
     
-	def __init__(self):
-		super(button_monitor, self).__init__()
-		print("button_monitor thread started")
-		self.currentState = None
-		self.buttonPushed = False
-		self.start_time = 0
-		self.mutex = QtCore.QMutex()
+    button_signal = QtCore.pyqtSignal(str)
 
-	def button_state(self, currentState, start_time, button_name):
-		self.currentState=currentState
+    def __init__(self):
+        super(button_monitor, self).__init__()
+        print("button_monitor thread started")
+        self.currentState = None
+        self.start_time = 0
+        self.elapsed_time = 0
 
-		if self.currentState=="pressed":
-			self.buttonPushed = True
-			self.start_time=start_time
+    def run(self):
+        
+        while self.currentState == "pressed":
+            
+            self.elapsed_time = time.time() - self.start_time
+            
+            if self.buttonPushed and self.elapsed_time > .5:
+                print("button is being held")
+                self.buttonPushed = False
+            
+            time.sleep(.1)
 
-		while self.buttonPushed:
-			elapsed_time = time.time() - self.start_time
-			if self.currentState == "released" and elapsed_time < 0.5:
-				print("button pressed")
-				self.buttonPushed=False
-				break
+    def button_state(self, currentState, start_time, button_name):
 
-			elif self.currentState != "released" and elapsed_time > 0.5:
-				print("button is being held")
-
-			elif self.currentState == "released" and elapsed_time > 0.5:
-				print(f"Button {button_name} was held for {elapsed_time} seconds")
-				break
-
-
+        self.currentState = currentState
+        
+        if self.currentState == "pressed":
+            self.start_time = start_time
+            self.buttonPushed = True
+        
+        elif self.currentState == "released":
+            if self.elapsed_time < .5:
+                print(f"{button_name} was pressed")
+                self.buttonPushed = False
+            else:
+                print(f"{button_name} held for {self.elapsed_time} seconds")
 
 # Thank you to SH for helping me learn how to embed a OpenCV video
 
@@ -170,13 +168,14 @@ class imageMonitor(QtCore.QThread):
 				for id, lm in enumerate(face_landmarks.landmark):
 					if id in self.mouthPoints:
 						h, w, c = Image.shape
-						cx, cy = int(lm.x*w), int(lm.y*h)
-						cv2.circle(Image, (cx, cy), 4, (0, 255, 0), cv2.FILLED)
+						px, py = int(lm.x*w), int(lm.y*h)
+						cv2.circle(Image, (px, py), 4, (0, 255, 0), cv2.FILLED)
 		return Image
 
 VIDEO_DEVICES = 4
 
 # Big thanks to https://stackoverflow.com/questions/52558617/enumerate-over-cameras-in-python for helping figuring out how to enumrate over cameras
+# camera tracker class to get cameras so user can choose which camera to display
 
 class camera_tracker:
 
@@ -195,11 +194,13 @@ class camera_tracker:
 		self.cameras = self.add_camera_information(camera_indexes)
 
 		return self.cameras
-
+	
 	def get_camera_indexes(self):
 		index = 0
 		camera_indexes = []
 		max_numbers_of_cameras_to_check = 10
+		
+		# adding all camera indexes to a list
 		while max_numbers_of_cameras_to_check > 0:
 			capture = cv2.VideoCapture(index)
 			if capture.read()[0]:
@@ -207,6 +208,7 @@ class camera_tracker:
 				capture.release()
 			index += 1
 			max_numbers_of_cameras_to_check -= 1
+
 		return camera_indexes
 
 	def add_camera_information(self, camera_indexes: list) -> list:
