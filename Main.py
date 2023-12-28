@@ -133,8 +133,6 @@ class imageMonitor(QtCore.QThread):
 	
 	mouthPoints = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95]
 
-	print("imageMonitor initialized")
-
 	def __init__(self):
 		super(imageMonitor, self).__init__()
 		print("imageMonitor initialized")
@@ -145,10 +143,8 @@ class imageMonitor(QtCore.QThread):
 		self.camera = cv2.VideoCapture(camera_index)
 
 	def run(self):
-		print("thread is running")
+		print("imageMonitor is running")
 		self.ThreadActive = True
-		print("thread is running")
-		print("wow")
 
 		while self.ThreadActive:
 			# getting frame from webcam
