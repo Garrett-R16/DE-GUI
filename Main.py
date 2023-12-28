@@ -131,6 +131,9 @@ class imageMonitor(QtCore.QThread):
 	Mesh = mpMesh.FaceMesh()
 	mpDraw = mp.solutions.drawing_utils
 	
+	# mouthpoints were found using https://raw.githubusercontent.com/google/mediapipe/a908d668c730da128dfa8d9f6bd25d519d006692/mediapipe/modules/face_geometry/data/canonical_face_model_uv_visualization.png
+	# can also be found using https://github.com/tensorflow/tfjs-models/blob/838611c02f51159afdd77469ce67f0e26b7bbb23/face-landmarks-detection/src/mediapipe-facemesh/keypoints.ts
+
 	mouthPoints = [78, 191, 80, 81, 82, 13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95]
 
 	def __init__(self):
