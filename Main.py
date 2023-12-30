@@ -165,10 +165,20 @@ class imageMonitor(QtCore.QThread):
 		if results.multi_face_landmarks:
 			for face_landmarks in results.multi_face_landmarks:
 				#mpDraw.draw_landmarks(img, face_landmarks, mpMesh.FACEMESH_TESSELATION)
+				tx = 0
+				ty = 0
 				for id, lm in enumerate(face_landmarks.landmark):
 					if id in self.mouthPoints:
 						h, w, c = Image.shape
 						px, py = int(lm.x*w), int(lm.y*h)
+						if id in [13, 14]:
+							tx+=px
+							ty+=py
+						if id == 14:
+							tx=int(tx/2)
+							ty=int(ty/2)
+							cv2.circle(Image, (tx, ty), 4, (0, 255, 0), cv2.FILLED)
+
 						cv2.circle(Image, (px, py), 4, (0, 255, 0), cv2.FILLED)
 		return Image
 
