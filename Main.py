@@ -7,12 +7,12 @@ warnings.simplefilter("ignore", UserWarning)
 sys.coinit_flags = 2
 import asyncio
 import platform
-import cv2
 
 if platform.system() == 'Windows':
 	import winrt.windows.devices.enumeration as windows_devices
-
 import mediapipe as mp
+
+# **note later versions of python (3.9+) are not compatible with winrt. Later versions should use winsdk instead
 
 # creating the main window
 
