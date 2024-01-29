@@ -13,6 +13,7 @@ if platform.system() == 'Windows':
 import mediapipe as mp
 
 # **note later versions of python (3.9+) are not compatible with winrt. Later versions should use winsdk instead
+# Additionally, some of these libraries may require installation if you have never used them before
 
 # creating the main window
 
