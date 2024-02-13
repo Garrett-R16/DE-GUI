@@ -25,7 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
 		uic.loadUi('draftGUI.ui', self)
 		# mapping the buttons to a function--probably a better way of doing this but ¯\_(ツ)_/¯ for the mmt
-		self.armDirections = ["x", "y", "z", "grip"]
+		self.armDirections = ["x", "y", "z", "grip", "x_ang", "y_ang", "z_ang"]
 
 		# starting button monitor qthread
 
